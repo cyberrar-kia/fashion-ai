@@ -198,6 +198,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;padding:20px 40px;display:
     <div class="welcome-badge">✦ Powered by AI · Personalised for you</div>
     <h1 class="welcome-title">Your personal<br/><em>style oracle</em><br/>awaits.</h1>
     <p class="welcome-sub">Answer 6 quick questions and receive a fully personalised AI fashion profile — outfit ideas, capsule wardrobe, and expert style tips curated just for you.</p>
+    <div style="margin-bottom:28px;background:rgba(201,146,10,0.06);border:1px solid rgba(201,146,10,0.2);border-radius:4px;padding:18px 20px;max-width:440px;margin-left:auto;margin-right:auto;text-align:left">
+      <div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:8px">🔑 Demo Note</div>
+      <p style="font-size:12px;color:rgba(240,235,227,0.65);line-height:1.7;margin-bottom:12px">This app is powered by the Claude AI API. To test the full experience, enter your <strong style="color:var(--gold-light)">Anthropic API key</strong> below. Get one free at <a href="https://console.anthropic.com" target="_blank" style="color:var(--gold);text-decoration:underline">console.anthropic.com</a></p>
+      <input id="apiKeyInput" type="password" placeholder="sk-ant-..." style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,146,10,0.25);border-radius:3px;padding:10px 14px;font-size:13px;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none" />
+    </div>
     <button class="btn-start" onclick="startFlow()">Begin Your Style Journey →</button>
     <div class="welcome-features">
       <div class="wf"><div class="wf-icon">⚡</div><div class="wf-label">60 seconds</div></div>
@@ -470,9 +475,19 @@ Create a detailed, inspiring, and practical style profile. Respond ONLY in this 
 }`;
 
   try {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if(!apiKey){
+      document.getElementById('screen-loading').classList.remove('active');
+      document.getElementById('screen-questions').classList.add('active');
+      const eb = document.getElementById('errorBox');
+      eb.style.display='block';
+      eb.textContent='⚠ No API key found. Please go back to the start and enter your Anthropic API key to generate results.';
+      return;
+    }
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
       body: JSON.stringify({
         model:"claude-sonnet-4-20250514",
         max_tokens:1000,
