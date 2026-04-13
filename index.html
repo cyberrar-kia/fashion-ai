@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>STYLAURA — AI Fashion Stylist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#0a0807}
+body{font-family:'DM Sans',sans-serif;color:#f0ebe3;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+:root{
+  --gold:#C9920A;
+  --gold-light:#E8C96A;
+  --cream:#F0EBE3;
+  --dark:#0A0807;
+  --panel:#13100D;
+  --border:rgba(201,146,10,0.2);
+  --muted:rgba(240,235,227,0.5);
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.6}
+
+/* ── HEADER ── */
+header{position:fixed;top:0;left:0;right:0;z-index:50;padding:20px 40px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(10,8,7,0.95),transparent)}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;letter-spacing:0.15em;color:var(--cream)}
+.logo span{color:var(--gold)}
+.logo-sub{font-size:10px;letter-spacing:0.3em;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300;margin-top:2px}
+.step-indicator{display:flex;gap:8px;align-items:center}
+.step-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.4s}
+.step-dot.done{background:var(--gold)}
+.step-dot.active{background:var(--gold-light);width:20px;border-radius:3px}
+
+/* ── SCREENS ── */
+.screen{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:100px 24px 60px;position:relative}
+.screen.active{display:flex}
+
+/* ── WELCOME ── */
+.welcome-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(201,146,10,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(201,146,10,0.05) 0%,transparent 50%)}
+.welcome-content{text-align:center;max-width:640px;position:relative;z-index:1}
+.welcome-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);padding:7px 18px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:32px;background:rgba(201,146,10,0.05)}
+.welcome-title{font-family:'Cormorant Garamond',serif;font-size:clamp(52px,8vw,96px);font-weight:300;line-height:0.95;letter-spacing:-0.02em;color:var(--cream);margin-bottom:24px}
+.welcome-title em{font-style:italic;color:var(--gold)}
+.welcome-sub{font-size:16px;color:var(--muted);line-height:1.8;max-width:420px;margin:0 auto 44px}
+.btn-start{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:#0a0807;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;letter-spacing:0.08em;padding:16px 36px;border-radius:3px;border:none;cursor:pointer;transition:all 0.3s}
+.btn-start:hover{background:var(--gold-light);transform:translateY(-2px)}
+.welcome-features{display:flex;gap:32px;margin-top:52px;justify-content:center;flex-wrap:wrap}
+.wf{text-align:center}
+.wf-icon{font-size:20px;margin-bottom:6px}
+.wf-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+/* ── QUESTION FLOW ── */
+.flow-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(201,146,10,0.06) 0%,transparent 55%)}
+.flow-content{width:100%;max-width:720px;position:relative;z-index:1}
+.q-step{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;font-weight:500}
+.q-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,52px);font-weight:300;line-height:1.1;color:var(--cream);margin-bottom:10px}
+.q-title em{font-style:italic;color:var(--gold)}
+.q-sub{font-size:14px;color:var(--muted);margin-bottom:36px;line-height:1.7}
+
+/* ── OPTION CARDS ── */
+.options-grid{display:grid;gap:12px}
+.options-grid.cols-2{grid-template-columns:1fr 1fr}
+.options-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+.opt{background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:4px;padding:20px 22px;cursor:pointer;transition:all 0.25s;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.opt::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,146,10,0.08),transparent);opacity:0;transition:opacity 0.25s}
+.opt:hover{border-color:var(--border);transform:translateY(-1px)}
+.opt:hover::before{opacity:1}
+.opt.selected{border-color:var(--gold);background:rgba(201,146,10,0.08)}
+.opt.selected::before{opacity:1}
+.opt-icon{font-size:22px;flex-shrink:0;width:36px;text-align:center}
+.opt-label{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--cream)}
+.opt-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.opt-check{margin-left:auto;width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s}
+.opt.selected .opt-check{background:var(--gold);border-color:var(--gold);color:#0a0807;font-size:10px;font-weight:700}
+
+/* ── NAV BUTTONS ── */
+.flow-nav{display:flex;justify-content:space-between;align-items:center;margin-top:32px}
+.btn-back{background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-size:13px;padding:11px 22px;border-radius:3px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.btn-back:hover{border-color:rgba(255,255,255,0.25);color:var(--cream)}
+.btn-next{background:var(--gold);color:#0a0807;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;letter-spacing:0.06em;padding:12px 32px;border-radius:3px;border:none;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+.btn-next:hover{background:var(--gold-light)}
+.btn-next:disabled{opacity:0.3;cursor:default;transform:none}
+.progress-bar{height:1px;background:rgba(255,255,255,0.06);margin-bottom:40px;border-radius:1px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width 0.5s ease}
+
+/* ── LOADING ── */
+.loading-screen{text-align:center}
+.loading-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-weight:300;color:var(--cream);margin-bottom:12px}
+.loading-title em{font-style:italic;color:var(--gold)}
+.loading-sub{font-size:14px;color:var(--muted);margin-bottom:40px}
+.spinner{width:48px;height:48px;border:1.5px solid rgba(201,146,10,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-steps{display:flex;flex-direction:column;gap:10px;max-width:280px;margin:32px auto 0}
+.ls{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);opacity:0;transition:opacity 0.5s}
+.ls.show{opacity:1}
+.ls-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+/* ── RESULTS ── */
+.results-screen{padding:80px 24px 80px}
+.results-inner{max-width:900px;margin:0 auto;width:100%}
+.results-header{text-align:center;margin-bottom:56px}
+.results-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);padding:6px 16px;border-radius:20px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
+.results-title{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,60px);font-weight:300;color:var(--cream);line-height:1.08;margin-bottom:12px}
+.results-title em{font-style:italic;color:var(--gold)}
+.results-sub{font-size:14px;color:var(--muted);line-height:1.75;max-width:500px;margin:0 auto}
+
+/* Profile card */
+.profile-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:28px 32px;margin-bottom:28px;position:relative;overflow:hidden}
+.profile-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.profile-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.profile-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--cream)}
+.profile-archetype{font-size:12px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.profile-tags{display:flex;gap:8px;flex-wrap:wrap}
+.ptag{border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:11px;color:var(--gold);letter-spacing:0.5px}
+.profile-body{font-size:14px;color:rgba(240,235,227,0.75);line-height:1.85}
+
+/* Outfit cards */
+.outfits-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.outfit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:28px}
+.outfit-card{background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:4px;padding:22px;transition:border-color 0.25s}
+.outfit-card:hover{border-color:var(--border)}
+.outfit-occasion{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.outfit-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--cream);margin-bottom:12px}
+.outfit-pieces{display:flex;flex-direction:column;gap:6px}
+.outfit-piece{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(240,235,227,0.7);line-height:1.5}
+.piece-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:6px}
+
+/* Tips */
+.tips-section{background:rgba(201,146,10,0.04);border:1px solid var(--border);border-radius:4px;padding:24px 28px;margin-bottom:28px}
+.tips-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--cream);margin-bottom:16px}
+.tip-list{display:flex;flex-direction:column;gap:10px}
+.tip{display:flex;gap:12px;font-size:13px;color:rgba(240,235,227,0.75);line-height:1.6}
+.tip-num{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--gold);flex-shrink:0;line-height:1.4}
+
+/* Capsule */
+.capsule-section{background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:4px;padding:24px 28px;margin-bottom:36px}
+.capsule-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--cream);margin-bottom:16px}
+.capsule-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.capsule-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:3px;padding:12px 14px;text-align:center}
+.capsule-emoji{font-size:20px;margin-bottom:6px}
+.capsule-name{font-size:11px;color:rgba(240,235,227,0.65);line-height:1.4}
+
+/* CTA */
+.results-cta{text-align:center;padding:40px 0 0}
+.btn-restart{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--border);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;padding:14px 32px;border-radius:3px;cursor:pointer;background:transparent;transition:all 0.25s;letter-spacing:0.05em}
+.btn-restart:hover{background:rgba(201,146,10,0.08)}
+
+/* ── ERROR ── */
+.error-box{background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:4px;padding:16px 20px;margin-top:16px;font-size:13px;color:#FCA5A5;display:none}
+
+/* ── MARKDOWN-LIKE RENDERING ── */
+.ai-output h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--cream);margin:24px 0 10px}
+.ai-output p{font-size:14px;color:rgba(240,235,227,0.8);line-height:1.85;margin-bottom:12px}
+.ai-output strong{color:var(--gold-light);font-weight:500}
+.ai-output ul{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.ai-output li{font-size:13px;color:rgba(240,235,227,0.7);line-height:1.6;display:flex;gap:10px}
+.ai-output li::before{content:'◆';color:var(--gold);font-size:8px;margin-top:5px;flex-shrink:0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  header{padding:16px 20px}
+  .options-grid.cols-2,.options-grid.cols-3{grid-template-columns:1fr}
+  .outfit-grid{grid-template-columns:1fr}
+  .flow-nav{flex-direction:column;gap:12px}
+  .btn-next,.btn-back{width:100%;justify-content:center}
+  .profile-header{flex-direction:column}
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.6s ease forwards}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo">STYL<span>AURA</span></div>
+    <div class="logo-sub">AI Fashion Stylist</div>
+  </div>
+  <div class="step-indicator" id="stepIndicator" style="display:none">
+    <div class="step-dot" id="sd0"></div>
+    <div class="step-dot" id="sd1"></div>
+    <div class="step-dot" id="sd2"></div>
+    <div class="step-dot" id="sd3"></div>
+    <div class="step-dot" id="sd4"></div>
+    <div class="step-dot" id="sd5"></div>
+  </div>
+</header>
+
+<!-- ══ SCREEN: WELCOME ══ -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-bg"></div>
+  <div class="welcome-content fade-up">
+    <div class="welcome-badge">✦ Powered by AI · Personalised for you</div>
+    <h1 class="welcome-title">Your personal<br/><em>style oracle</em><br/>awaits.</h1>
+    <p class="welcome-sub">Answer 6 quick questions and receive a fully personalised AI fashion profile — outfit ideas, capsule wardrobe, and expert style tips curated just for you.</p>
+    <button class="btn-start" onclick="startFlow()">Begin Your Style Journey →</button>
+    <div class="welcome-features">
+      <div class="wf"><div class="wf-icon">⚡</div><div class="wf-label">60 seconds</div></div>
+      <div class="wf"><div class="wf-icon">🎯</div><div class="wf-label">Personalised</div></div>
+      <div class="wf"><div class="wf-icon">🤖</div><div class="wf-label">AI Powered</div></div>
+      <div class="wf"><div class="wf-icon">✨</div><div class="wf-label">Free to use</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: QUESTIONS ══ -->
+<div class="screen" id="screen-questions">
+  <div class="flow-bg"></div>
+  <div class="flow-content fade-up">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div id="questionArea"></div>
+    <div class="flow-nav">
+      <button class="btn-back" id="backBtn" onclick="prevQ()">← Back</button>
+      <button class="btn-next" id="nextBtn" onclick="nextQ()" disabled>Continue →</button>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: LOADING ══ -->
+<div class="screen" id="screen-loading">
+  <div class="loading-screen fade-up">
+    <div class="spinner"></div>
+    <h2 class="loading-title">Crafting your<br/><em>style profile</em></h2>
+    <p class="loading-sub">Our AI stylist is analysing your preferences…</p>
+    <div class="loading-steps">
+      <div class="ls" id="ls0"><div class="ls-dot"></div>Analysing your aesthetic preferences</div>
+      <div class="ls" id="ls1"><div class="ls-dot"></div>Building your style archetype</div>
+      <div class="ls" id="ls2"><div class="ls-dot"></div>Curating outfit combinations</div>
+      <div class="ls" id="ls3"><div class="ls-dot"></div>Compiling capsule wardrobe essentials</div>
+      <div class="ls" id="ls4"><div class="ls-dot"></div>Adding expert styling tips</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: RESULTS ══ -->
+<div class="screen" id="screen-results" style="display:none;align-items:flex-start">
+  <div class="results-inner">
+    <div class="results-header">
+      <div class="results-tag">✦ Your AI Style Profile</div>
+      <h2 class="results-title">Your look,<br/><em>perfectly defined.</em></h2>
+      <p class="results-sub">Based on your answers, your AI stylist has created a personalised fashion profile with outfit ideas, capsule wardrobe, and expert tips.</p>
+    </div>
+    <div id="resultsContent"></div>
+    <div class="results-cta">
+      <button class="btn-restart" onclick="restart()">↺ Start Over — Try a New Style</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Questions ──
+const questions = [
+  {
+    id:"gender",
+    step:"01 / 06",
+    title:"How do you like to <em>express yourself?</em>",
+    sub:"This helps us tailor outfits to your wardrobe.",
+    cols:2,
+    options:[
+      {icon:"👗",label:"Feminine",desc:"Dresses, skirts, feminine silhouettes"},
+      {icon:"👔",label:"Masculine",desc:"Tailored, structured, classic menswear"},
+      {icon:"✦",label:"Gender-Fluid",desc:"Mix of both — I dress freely"},
+      {icon:"🎨",label:"Androgynous",desc:"Boundary-pushing, genre-defying"},
+    ]
+  },
+  {
+    id:"aesthetic",
+    step:"02 / 06",
+    title:"Which aesthetic <em>speaks to you?</em>",
+    sub:"Pick the vibe that feels most like you.",
+    cols:2,
+    options:[
+      {icon:"🖤",label:"Minimalist",desc:"Clean lines, neutral palette, effortless"},
+      {icon:"💫",label:"Streetwear",desc:"Bold, urban, culture-forward"},
+      {icon:"🌹",label:"Romantic",desc:"Soft, feminine, vintage-inspired"},
+      {icon:"⚡",label:"Edgy",desc:"Dark, dramatic, rule-breaking"},
+      {icon:"🏖️",label:"Boho",desc:"Free-spirited, earthy, relaxed"},
+      {icon:"🎩",label:"Classic",desc:"Timeless, polished, sophisticated"},
+    ]
+  },
+  {
+    id:"occasion",
+    step:"03 / 06",
+    title:"What's your <em>main dressing need?</em>",
+    sub:"Where do you need to look your best?",
+    cols:2,
+    options:[
+      {icon:"💼",label:"Work & Office",desc:"Professional, polished, powerful"},
+      {icon:"✨",label:"Evenings & Events",desc:"Standout looks for special moments"},
+      {icon:"☀️",label:"Everyday Casual",desc:"Comfortable, stylish day-to-day"},
+      {icon:"🎉",label:"Social & Going Out",desc:"Weekend plans, dinners, dates"},
+    ]
+  },
+  {
+    id:"budget",
+    step:"04 / 06",
+    title:"What's your <em>style budget?</em>",
+    sub:"We'll recommend brands and pieces that fit your range.",
+    cols:3,
+    options:[
+      {icon:"💚",label:"Budget-Savvy",desc:"Under $50 per piece"},
+      {icon:"💛",label:"Mid-Range",desc:"$50–$200 per piece"},
+      {icon:"💎",label:"Luxury",desc:"$200+ per piece"},
+    ]
+  },
+  {
+    id:"body",
+    step:"05 / 06",
+    title:"What's your <em>body confidence goal?</em>",
+    sub:"We'll suggest cuts and silhouettes that work for you.",
+    cols:2,
+    options:[
+      {icon:"💪",label:"Show it off",desc:"I want to highlight my best features"},
+      {icon:"🌊",label:"Balanced & Flowing",desc:"Relaxed fits that move with me"},
+      {icon:"📐",label:"Structured & Defined",desc:"Tailored pieces that create shape"},
+      {icon:"🌿",label:"Comfortable First",desc:"Ease and movement above all"},
+    ]
+  },
+  {
+    id:"colour",
+    step:"06 / 06",
+    title:"Your <em>colour story?</em>",
+    sub:"What palette feels most like home?",
+    cols:2,
+    options:[
+      {icon:"🤍",label:"Neutrals & Earth",desc:"Beige, cream, camel, white, grey"},
+      {icon:"🖤",label:"Darks & Monochromes",desc:"Black, navy, charcoal, deep tones"},
+      {icon:"🌈",label:"Bold & Vibrant",desc:"Colour-blocking, bright, statement"},
+      {icon:"🌸",label:"Soft & Pastel",desc:"Blush, sage, lavender, powder blue"},
+    ]
+  }
+];
+
+let currentQ = 0;
+let answers = {};
+
+function startFlow(){
+  document.getElementById('screen-welcome').classList.remove('active');
+  document.getElementById('screen-questions').classList.add('active');
+  document.getElementById('stepIndicator').style.display='flex';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = questions[currentQ];
+  const pct = (currentQ/questions.length)*100;
+  document.getElementById('progressFill').style.width = pct+'%';
+
+  // Update step dots
+  for(let i=0;i<6;i++){
+    const d = document.getElementById('sd'+i);
+    d.className = 'step-dot' + (i<currentQ?' done':i===currentQ?' active':'');
+  }
+
+  const area = document.getElementById('questionArea');
+  area.innerHTML = `
+    <div class="q-step">${q.step}</div>
+    <h2 class="q-title">${q.title}</h2>
+    <p class="q-sub">${q.sub}</p>
+    <div class="options-grid cols-${q.cols}">
+      ${q.options.map((o,i)=>`
+        <div class="opt ${answers[q.id]===o.label?'selected':''}" onclick="selectOpt('${q.id}','${o.label}',this)">
+          <span class="opt-icon">${o.icon}</span>
+          <div>
+            <div class="opt-label">${o.label}</div>
+            <div class="opt-desc">${o.desc}</div>
+          </div>
+          <div class="opt-check">${answers[q.id]===o.label?'✓':''}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  document.getElementById('nextBtn').disabled = !answers[q.id];
+  document.getElementById('backBtn').style.visibility = currentQ===0?'hidden':'visible';
+}
+
+function selectOpt(qId, value, el){
+  answers[qId] = value;
+  document.querySelectorAll('.opt').forEach(o=>{
+    o.classList.remove('selected');
+    o.querySelector('.opt-check').textContent='';
+  });
+  el.classList.add('selected');
+  el.querySelector('.opt-check').textContent='✓';
+  document.getElementById('nextBtn').disabled=false;
+}
+
+function nextQ(){
+  if(currentQ < questions.length-1){
+    currentQ++;
+    renderQuestion();
+  } else {
+    generateResults();
+  }
+}
+
+function prevQ(){
+  if(currentQ>0){currentQ--;renderQuestion();}
+}
+
+async function generateResults(){
+  // Switch to loading
+  document.getElementById('screen-questions').classList.remove('active');
+  document.getElementById('screen-loading').classList.add('active');
+
+  // Animate loading steps
+  for(let i=0;i<5;i++){
+    await delay(700+i*400);
+    document.getElementById('ls'+i).classList.add('show');
+  }
+
+  const prompt = `You are STYLAURA, a world-class AI fashion stylist. Based on these style preferences, create a highly personalised fashion profile.
+
+USER PREFERENCES:
+- Expression: ${answers.gender}
+- Aesthetic: ${answers.aesthetic}
+- Main occasion: ${answers.occasion}
+- Budget: ${answers.budget}
+- Fit goal: ${answers.body}
+- Colour palette: ${answers.colour}
+
+Create a detailed, inspiring, and practical style profile. Respond ONLY in this exact JSON format (no markdown, no extra text):
+
+{
+  "styleName": "A 2-3 word evocative style name (e.g. 'Urban Minimalist', 'Romantic Rebel')",
+  "archetype": "A single word archetype (e.g. 'The Curator', 'The Visionary')",
+  "profileSummary": "A 3-sentence inspiring description of this person's style identity. Make it personal and aspirational.",
+  "tags": ["tag1","tag2","tag3","tag4"],
+  "outfits": [
+    {
+      "occasion": "Occasion name",
+      "name": "Outfit name",
+      "pieces": ["piece 1 with specific detail","piece 2","piece 3","piece 4","piece 5"]
+    },
+    {
+      "occasion": "Occasion name",
+      "name": "Outfit name",
+      "pieces": ["piece 1","piece 2","piece 3","piece 4","piece 5"]
+    },
+    {
+      "occasion": "Occasion name",
+      "name": "Outfit name",
+      "pieces": ["piece 1","piece 2","piece 3","piece 4","piece 5"]
+    }
+  ],
+  "capsuleEssentials": [
+    {"emoji":"👖","name":"Item name"},
+    {"emoji":"👕","name":"Item name"},
+    {"emoji":"🧥","name":"Item name"},
+    {"emoji":"👟","name":"Item name"},
+    {"emoji":"👜","name":"Item name"},
+    {"emoji":"⌚","name":"Item name"},
+    {"emoji":"🧣","name":"Item name"},
+    {"emoji":"👗","name":"Item name"}
+  ],
+  "stylingTips": [
+    "Specific actionable styling tip 1 for this person's exact preferences",
+    "Specific actionable styling tip 2",
+    "Specific actionable styling tip 3",
+    "Specific actionable styling tip 4",
+    "Specific actionable styling tip 5"
+  ]
+}`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content[0].text;
+
+    let profile;
+    try {
+      const cleaned = raw.replace(/```json|```/g,'').trim();
+      profile = JSON.parse(cleaned);
+    } catch(e){
+      throw new Error("Could not parse style profile. Please try again.");
+    }
+
+    renderResults(profile);
+
+  } catch(err){
+    document.getElementById('screen-loading').classList.remove('active');
+    document.getElementById('screen-questions').classList.add('active');
+    const eb = document.getElementById('errorBox');
+    eb.style.display='block';
+    eb.textContent = 'Something went wrong: '+err.message+'. Please try again.';
+  }
+}
+
+function renderResults(p){
+  document.getElementById('screen-loading').classList.remove('active');
+  const rs = document.getElementById('screen-results');
+  rs.style.display='flex';
+  rs.classList.add('active');
+
+  const content = document.getElementById('resultsContent');
+  content.innerHTML = `
+    <div class="profile-card fade-up">
+      <div class="profile-header">
+        <div>
+          <div class="profile-name">${p.styleName || 'Your Style Profile'}</div>
+          <div class="profile-archetype">${p.archetype || ''}</div>
+        </div>
+        <div class="profile-tags">
+          ${(p.tags||[]).map(t=>`<div class="ptag">${t}</div>`).join('')}
+        </div>
+      </div>
+      <p class="profile-body">${p.profileSummary || ''}</p>
+    </div>
+
+    <div class="outfits-label">✦ Curated Outfit Ideas</div>
+    <div class="outfit-grid fade-up">
+      ${(p.outfits||[]).map(o=>`
+        <div class="outfit-card">
+          <div class="outfit-occasion">${o.occasion}</div>
+          <div class="outfit-name">${o.name}</div>
+          <div class="outfit-pieces">
+            ${(o.pieces||[]).map(piece=>`
+              <div class="outfit-piece"><div class="piece-dot"></div>${piece}</div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="capsule-section fade-up">
+      <div class="capsule-title">Your Capsule Wardrobe Essentials</div>
+      <div class="capsule-grid">
+        ${(p.capsuleEssentials||[]).map(i=>`
+          <div class="capsule-item">
+            <div class="capsule-emoji">${i.emoji}</div>
+            <div class="capsule-name">${i.name}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="tips-section fade-up">
+      <div class="tips-title">Expert Styling Tips — Just For You</div>
+      <div class="tip-list">
+        ${(p.stylingTips||[]).map((tip,i)=>`
+          <div class="tip"><div class="tip-num">0${i+1}</div>${tip}</div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function restart(){
+  currentQ=0;
+  answers={};
+  document.getElementById('screen-results').style.display='none';
+  document.getElementById('screen-results').classList.remove('active');
+  document.getElementById('screen-welcome').classList.add('active');
+  document.getElementById('stepIndicator').style.display='none';
+  document.getElementById('errorBox').style.display='none';
+  for(let i=0;i<5;i++) document.getElementById('ls'+i).classList.remove('show');
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+</script>
+</body>
+</html>
