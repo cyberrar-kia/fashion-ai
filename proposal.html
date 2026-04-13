@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>STYLAURA — AI Fashion App Proposal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0A0807}
+body{font-family:'DM Sans',sans-serif;color:#F0EBE3;-webkit-font-smoothing:antialiased}
+
+:root{
+  --gold:#C9920A;
+  --gold-light:#E8C96A;
+  --cream:#F0EBE3;
+  --dark:#0A0807;
+  --panel:#13100D;
+  --border:rgba(201,146,10,0.22);
+  --muted:rgba(240,235,227,0.5);
+}
+
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+
+.deck{width:100vw;height:100vh;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:52px 80px 88px;opacity:0;pointer-events:none;transition:opacity 0.5s ease,transform 0.5s ease;transform:translateY(28px)}
+.slide.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.slide.exit{opacity:0;transform:translateY(-28px)}
+
+/* ── BACKGROUNDS ── */
+.bg-hero{background:radial-gradient(ellipse at 25% 60%,rgba(201,146,10,0.1) 0%,transparent 55%),radial-gradient(ellipse at 80% 20%,rgba(201,146,10,0.06) 0%,transparent 45%),#0A0807}
+.bg-dark{background:radial-gradient(ellipse at 70% 50%,rgba(201,146,10,0.07) 0%,transparent 55%),#0A0807}
+.bg-panel{background:#0E0C09}
+.bg-gold-end{background:radial-gradient(ellipse at 40% 50%,rgba(201,146,10,0.12) 0%,transparent 60%),#0A0807}
+
+.shape{position:absolute;border-radius:50%;pointer-events:none;z-index:0}
+.line-accent{position:absolute;pointer-events:none;z-index:0}
+
+.slide-inner{position:relative;z-index:1;max-width:1080px;margin:0 auto;width:100%}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:500;letter-spacing:1.8px;text-transform:uppercase;padding:6px 16px;border-radius:0;margin-bottom:22px;width:fit-content;border-bottom:1px solid var(--gold);color:var(--gold)}
+
+/* ── TYPE ── */
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,6vw,80px);font-weight:300;line-height:0.95;letter-spacing:-0.02em;color:var(--cream);margin-bottom:20px}
+h1 em{font-style:italic;color:var(--gold)}
+h2{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,52px);font-weight:300;line-height:1.05;letter-spacing:-0.02em;color:var(--cream);margin-bottom:14px}
+h2 em{font-style:italic;color:var(--gold)}
+.lead{font-size:clamp(13px,1.3vw,15px);color:var(--muted);line-height:1.85;max-width:560px;margin-bottom:28px}
+
+/* ── STAT ROW ── */
+.stat-row{display:flex;gap:0;margin-bottom:36px;border:1px solid var(--border)}
+.stat{flex:1;padding:20px 24px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3vw,38px);font-weight:600;color:var(--gold);line-height:1}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-top:6px}
+
+/* ── GRIDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border)}
+
+/* ── CARDS ── */
+.card{background:var(--dark);padding:24px;transition:background 0.2s}
+.card:hover{background:#13100D}
+.card-icon{font-size:20px;margin-bottom:12px}
+.card h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--cream);margin-bottom:7px}
+.card p{font-size:12px;color:var(--muted);line-height:1.7}
+
+/* ── ROW ITEMS ── */
+.row-list{border-top:1px solid rgba(255,255,255,0.06)}
+.row-item{display:flex;gap:18px;align-items:flex-start;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.row-num{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold);width:28px;flex-shrink:0;line-height:1.1}
+.row-item h4{font-size:13px;font-weight:500;color:var(--cream);margin-bottom:3px;letter-spacing:0.3px}
+.row-item p{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ── FLOW STEPS ── */
+.flow-row{display:flex;gap:0;margin-top:8px;border:1px solid var(--border)}
+.flow-step{flex:1;padding:20px 16px;border-right:1px solid var(--border);text-align:center;position:relative}
+.flow-step:last-child{border-right:none}
+.flow-arrow{position:absolute;right:-10px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:14px;z-index:2}
+.flow-step:last-child .flow-arrow{display:none}
+.flow-icon{font-size:20px;margin-bottom:8px}
+.flow-step h4{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;color:var(--cream);margin-bottom:4px}
+.flow-step p{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* ── TIMELINE ── */
+.timeline{display:flex;position:relative;margin:24px 0 8px}
+.timeline::before{content:'';position:absolute;top:17px;left:3%;right:3%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);z-index:0}
+.t-step{flex:1;text-align:center;position:relative;z-index:1}
+.t-circle{width:34px;height:34px;border-radius:0;background:var(--dark);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-family:'Cormorant Garamond',serif;font-size:11px;font-weight:600;color:var(--gold)}
+.t-step h4{font-size:11px;font-weight:500;color:var(--cream);margin-bottom:2px;letter-spacing:0.3px}
+.t-step p{font-size:10px;color:var(--muted)}
+
+/* ── PRICE ── */
+.price-panel{border:1px solid var(--border);padding:32px;text-align:center;position:relative;overflow:hidden}
+.price-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.price-big{font-family:'Cormorant Garamond',serif;font-size:clamp(64px,9vw,100px);font-weight:300;color:var(--gold);line-height:1;letter-spacing:-0.04em}
+.price-sub{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:8px}
+.deliv-list{display:flex;flex-direction:column;gap:0;border:1px solid rgba(255,255,255,0.06);margin-top:8px}
+.deliv{display:flex;align-items:center;gap:12px;font-size:12.5px;color:rgba(240,235,227,0.8);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.deliv:last-child{border-bottom:none}
+.deliv-check{color:var(--gold);font-size:11px;flex-shrink:0}
+
+/* ── INSIGHT ── */
+.insight{border-left:2px solid var(--gold);padding:14px 20px;margin-top:18px;background:rgba(201,146,10,0.04)}
+.insight p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:rgba(240,235,227,0.8);line-height:1.75}
+
+/* ── CLIENT BADGE ── */
+.client-badge{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--border);padding:8px 16px;margin-bottom:20px;flex-wrap:wrap}
+.client-badge span{font-size:11px;color:var(--muted);letter-spacing:0.3px}
+.client-badge strong{font-size:11px;color:var(--gold-light);font-weight:500}
+.divider{color:rgba(201,146,10,0.3)}
+
+/* ── CTA ── */
+.cta-btn{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:#0A0807;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:16px;letter-spacing:0.08em;padding:16px 36px;border:none;cursor:pointer;transition:all 0.25s;text-decoration:none;margin-top:24px}
+.cta-btn:hover{background:var(--gold-light);transform:translateY(-2px)}
+
+/* ── SCREEN PREVIEW ── */
+.screen-preview{background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.preview-bar{background:rgba(255,255,255,0.04);padding:8px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.preview-dot{width:7px;height:7px;border-radius:50%}
+.preview-body{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.preview-block{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:2px;padding:12px;height:60px}
+
+/* ── NAV ── */
+.nav-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(10,8,7,0.97);border-top:1px solid rgba(201,146,10,0.15);display:flex;align-items:center;justify-content:space-between;padding:14px 48px}
+.nav-dots{display:flex;gap:7px}
+.ndot{width:6px;height:6px;background:rgba(255,255,255,0.1);cursor:pointer;transition:all 0.25s;border:none;padding:0}
+.ndot.on{background:var(--gold);width:22px}
+.nav-btn{background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-size:12px;font-family:'DM Sans',sans-serif;padding:8px 20px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px}
+.nav-btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.nav-btn:disabled{opacity:0.25;cursor:default}
+.slide-lbl{font-size:10px;color:rgba(201,146,10,0.4);letter-spacing:1px;text-align:center;text-transform:uppercase}
+.progress{position:fixed;top:0;left:0;height:1px;background:linear-gradient(90deg,var(--gold),var(--gold-light));z-index:300;transition:width 0.4s ease}
+
+@media(max-width:768px){
+  .slide{padding:32px 20px 88px}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .stat-row{flex-direction:column}
+  .stat{border-right:none;border-bottom:1px solid var(--border)}
+  .flow-row{flex-direction:column}
+  .timeline{flex-direction:column;gap:12px}
+  .timeline::before{display:none}
+  .t-step{text-align:left;display:flex;gap:12px;align-items:flex-start}
+  .t-circle{margin:0;flex-shrink:0}
+  .nav-bar{padding:12px 20px}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck">
+
+  <!-- S1 — COVER -->
+  <div class="slide bg-hero active" id="s0">
+    <div class="shape" style="width:600px;height:600px;background:rgba(201,146,10,0.05);top:-150px;right:-150px;filter:blur(60px)"></div>
+    <div class="slide-inner" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center">
+      <div>
+        <div class="chip">✦ Interactive AI Web App Proposal</div>
+        <h1>An AI stylist<br/>in the palm of<br/><em>every hand.</em></h1>
+        <p class="lead">A fully working map-based AI fashion styling app — built and live before this proposal was even sent.</p>
+        <div class="stat-row" style="margin-bottom:0">
+          <div class="stat"><div class="stat-val">6</div><div class="stat-lbl">Step Flow</div></div>
+          <div class="stat"><div class="stat-val">AI</div><div class="stat-lbl">Powered</div></div>
+          <div class="stat"><div class="stat-val">$250</div><div class="stat-lbl">Fixed</div></div>
+          <div class="stat"><div class="stat-val">10d</div><div class="stat-lbl">Delivery</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="screen-preview">
+          <div class="preview-bar">
+            <div class="preview-dot" style="background:#ff5f57"></div>
+            <div class="preview-dot" style="background:#febc2e"></div>
+            <div class="preview-dot" style="background:#28c840"></div>
+            <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:8px">stylaura.vercel.app</span>
+          </div>
+          <div style="padding:28px;text-align:center">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--cream);margin-bottom:6px">STYL<span style="color:var(--gold)">AURA</span></div>
+            <div style="font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:20px">AI Fashion Stylist</div>
+            <div style="background:rgba(201,146,10,0.08);border:1px solid var(--border);padding:12px;margin-bottom:12px;font-size:11px;color:var(--muted)">How do you like to express yourself?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:rgba(201,146,10,0.1);border:1px solid var(--gold);padding:10px;font-size:11px;color:var(--gold)">✓ Feminine</div>
+              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:10px;font-size:11px;color:var(--muted)">Masculine</div>
+              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:10px;font-size:11px;color:var(--muted)">Gender-Fluid</div>
+              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:10px;font-size:11px;color:var(--muted)">Androgynous</div>
+            </div>
+            <div style="margin-top:14px;background:var(--gold);color:#0A0807;padding:10px;font-size:12px;font-family:'Cormorant Garamond',serif;font-weight:600">Continue →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S2 — I READ THE BRIEF -->
+  <div class="slide bg-dark" id="s1">
+    <div class="slide-inner">
+      <div class="chip">✦ Understanding the Brief</div>
+      <h2>What this project <em>really requires</em></h2>
+      <p class="lead" style="margin-bottom:12px">This isn't just a form with dropdowns. It's an intelligent, immersive experience that makes users feel seen and styled.</p>
+      <div class="row-list">
+        <div class="row-item"><div class="row-num">01</div><div><h4>Map-based user flow — not a simple form</h4><p>Users navigate a visual journey through style preferences — each step building anticipation before the AI reveal. Designed like a luxury quiz experience.</p></div></div>
+        <div class="row-item"><div class="row-num">02</div><div><h4>Real AI integration — not fake results</h4><p>The Claude API generates a genuinely personalised style profile: a unique name, archetype, 3 full outfits, capsule wardrobe, and 5 expert tips — all tailored to exactly what the user selected.</p></div></div>
+        <div class="row-item"><div class="row-num">03</div><div><h4>Premium fashion aesthetic — not generic UI</h4><p>The design language matches luxury fashion — Cormorant Garamond serif, gold accents, grain overlay, dark palette. It feels like opening Vogue, not filling out a Google Form.</p></div></div>
+        <div class="row-item"><div class="row-num">04</div><div><h4>Fully responsive — desktop and mobile</h4><p>Every screen adapts cleanly — single-column stacking, touch-friendly tap targets, and a mobile-optimised results layout that reads beautifully on any device.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3 — THE FLOW -->
+  <div class="slide bg-panel" id="s2">
+    <div class="slide-inner">
+      <div class="chip">✦ The User Journey</div>
+      <h2>A 6-step map-based <em>styling experience</em></h2>
+      <p class="lead" style="margin-bottom:20px">Users navigate a curated preference flow — each answer building a richer AI prompt behind the scenes.</p>
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-icon">👗</div><h4>Expression</h4><p>Feminine / Masculine / Fluid</p><div class="flow-arrow">›</div></div>
+        <div class="flow-step"><div class="flow-icon">🎨</div><h4>Aesthetic</h4><p>Minimal / Edgy / Boho</p><div class="flow-arrow">›</div></div>
+        <div class="flow-step"><div class="flow-icon">💼</div><h4>Occasion</h4><p>Work / Evening / Casual</p><div class="flow-arrow">›</div></div>
+        <div class="flow-step"><div class="flow-icon">💎</div><h4>Budget</h4><p>Savvy / Mid / Luxury</p><div class="flow-arrow">›</div></div>
+        <div class="flow-step"><div class="flow-icon">📐</div><h4>Fit Goal</h4><p>Show off / Structured</p><div class="flow-arrow">›</div></div>
+        <div class="flow-step"><div class="flow-icon">🎨</div><h4>Colour</h4><p>Neutral / Bold / Pastel</p></div>
+      </div>
+      <div style="margin-top:20px;border:1px solid var(--border);padding:20px 24px;background:rgba(201,146,10,0.03)">
+        <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">→ AI Output Generated</div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--muted)">✦ Personalised style name &amp; archetype</span>
+          <span style="font-size:12px;color:var(--muted)">✦ 3 complete outfit builds</span>
+          <span style="font-size:12px;color:var(--muted)">✦ 8-item capsule wardrobe</span>
+          <span style="font-size:12px;color:var(--muted)">✦ 5 expert styling tips</span>
+        </div>
+      </div>
+      <div class="insight"><p>"Every answer sharpens the AI prompt. By question 6, the model has enough context to generate recommendations that feel genuinely personal — not generic."</p></div>
+    </div>
+  </div>
+
+  <!-- S4 — WHAT I BUILT -->
+  <div class="slide bg-dark" id="s3">
+    <div class="slide-inner">
+      <div class="chip">✦ Proof of Work</div>
+      <h2>I didn't describe it —<br/><em>I built it.</em></h2>
+      <p class="lead" style="margin-bottom:20px">Before sending this proposal, I built and deployed the complete app. You can test it right now.</p>
+      <div class="grid-3" style="margin-top:0;margin-bottom:1px">
+        <div class="card"><div class="card-icon">🌐</div><h3>Live Demo App</h3><p>Full 6-step preference flow, loading animation, AI-powered results page. Working on desktop and mobile right now.</p></div>
+        <div class="card"><div class="card-icon">🤖</div><h3>Real AI Results</h3><p>Claude API integration generates genuinely unique style profiles — no two users get the same output.</p></div>
+        <div class="card"><div class="card-icon">📱</div><h3>Fully Responsive</h3><p>Test it on your phone. Every layout, interaction, and result page adapts cleanly to any screen size.</p></div>
+      </div>
+      <div class="grid-3">
+        <div class="card"><div class="card-icon">⚡</div><h3>Animated Loading</h3><p>5-step loading sequence with spinner while the AI generates — builds anticipation before the reveal.</p></div>
+        <div class="card"><div class="card-icon">✨</div><h3>Luxury Aesthetic</h3><p>Cormorant Garamond serif, gold palette, grain overlay — designed to feel like a premium fashion product.</p></div>
+        <div class="card"><div class="card-icon">🔑</div><h3>API-Ready</h3><p>Currently demo mode (user-supplied key). Production version uses a secure serverless API proxy.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5 — TIMELINE -->
+  <div class="slide bg-panel" id="s4">
+    <div class="slide-inner">
+      <div class="chip">✦ Delivery Plan</div>
+      <h2>Production-ready in <em>10 days.</em></h2>
+      <p class="lead" style="margin-bottom:16px">The demo is already built. What remains is production polish, your branding, and server-side API security.</p>
+      <div class="timeline">
+        <div class="t-step"><div class="t-circle">D1</div><div><h4>Kickoff</h4><p>Brand review, colour palette, content</p></div></div>
+        <div class="t-step"><div class="t-circle">D2–3</div><div><h4>Polish</h4><p>Apply your branding &amp; copy</p></div></div>
+        <div class="t-step"><div class="t-circle">D4–6</div><div><h4>Build</h4><p>Serverless API, extra screens</p></div></div>
+        <div class="t-step"><div class="t-circle">D7–8</div><div><h4>Test</h4><p>Full QA across devices</p></div></div>
+        <div class="t-step"><div class="t-circle">D9</div><div><h4>Review</h4><p>Your feedback + revisions</p></div></div>
+        <div class="t-step"><div class="t-circle">D10</div><div><h4>Launch</h4><p>Live on your domain</p></div></div>
+      </div>
+      <div class="grid-3" style="margin-top:20px">
+        <div class="card"><div class="card-icon">🔒</div><h3>Secure API Proxy</h3><p>API key moves to a Vercel serverless function — never exposed in the browser.</p></div>
+        <div class="card"><div class="card-icon">🎨</div><h3>Your Branding</h3><p>Colours, logo, name, and copy customised to match your product identity.</p></div>
+        <div class="card"><div class="card-icon">📦</div><h3>Full Handover</h3><p>Clean source code, deployment docs, and a walkthrough so you can manage it yourself.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6 — PRICING -->
+  <div class="slide bg-dark" id="s5">
+    <div class="slide-inner">
+      <div class="chip">✦ Investment</div>
+      <h2>Everything. <em>Fixed price.</em></h2>
+      <div class="grid-2" style="margin-top:20px;gap:20px;align-items:start">
+        <div class="price-panel">
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Complete Project</div>
+          <div class="price-big">$250</div>
+          <div class="price-sub">Fixed · No scope creep · Full delivery</div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Included in full:</div>
+          <div class="deliv-list">
+            <div class="deliv"><span class="deliv-check">◆</span>6-step interactive preference flow</div>
+            <div class="deliv"><span class="deliv-check">◆</span>Claude AI integration (serverless, secure)</div>
+            <div class="deliv"><span class="deliv-check">◆</span>Personalised style profile results page</div>
+            <div class="deliv"><span class="deliv-check">◆</span>Outfit builder, capsule wardrobe, tips</div>
+            <div class="deliv"><span class="deliv-check">◆</span>Your branding applied throughout</div>
+            <div class="deliv"><span class="deliv-check">◆</span>Deployed to your domain or Vercel</div>
+            <div class="deliv"><span class="deliv-check">◆</span>Full source code handed over</div>
+            <div class="deliv"><span class="deliv-check">◆</span>2 rounds of revisions</div>
+          </div>
+          <div class="insight" style="margin-top:16px"><p>"The demo is already built and live. You're not paying for experimentation — you're paying for a production-ready version of something that already exists."</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S7 — CTA -->
+  <div class="slide bg-gold-end" id="s6">
+    <div class="shape" style="width:500px;height:500px;background:rgba(201,146,10,0.07);top:-100px;right:-100px;filter:blur(60px)"></div>
+    <div class="slide-inner">
+      <div class="client-badge">
+        <strong>Posted 50 mins ago</strong><span class="divider">·</span>
+        <span>JS · CSS · HTML5</span><span class="divider">·</span>
+        <span>$250 Fixed</span><span class="divider">·</span>
+        <span>Ongoing project</span>
+      </div>
+      <h1>The app is live.<br/>The plan is clear.<br/><em>Let's ship it.</em></h1>
+      <p class="lead">I built the demo before sending this proposal. That's the standard I work to. Send me a message and we can be in production within 10 days.</p>
+      <div class="insight"><p>"Most applicants will describe what they'd build. I built it. Visit the demo, test the AI flow, and then decide — that's the most honest pitch I can make."</p></div>
+      <a class="cta-btn" href="#">Send Me a Message →</a>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="go(-1)" disabled>← Prev</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+    <div class="nav-dots" id="dots"></div>
+    <div class="slide-lbl" id="lbl">01 / 07</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="go(1)">Next →</button>
+</div>
+
+<script>
+const total=7,slides=document.querySelectorAll('.slide');
+let cur=0;
+const dotsEl=document.getElementById('dots'),lbl=document.getElementById('lbl'),prog=document.getElementById('progress');
+for(let i=0;i<total;i++){const d=document.createElement('button');d.className='ndot'+(i===0?' on':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d)}
+function pad(n){return String(n).padStart(2,'0')}
+function updateUI(){
+  prog.style.width=((cur+1)/total*100)+'%';
+  lbl.textContent=pad(cur+1)+' / '+pad(total);
+  document.getElementById('prevBtn').disabled=cur===0;
+  document.getElementById('nextBtn').disabled=cur===total-1;
+  dotsEl.querySelectorAll('.ndot').forEach((d,i)=>d.className='ndot'+(i===cur?' on':''));
+}
+function goTo(n){
+  slides[cur].classList.remove('active');slides[cur].classList.add('exit');
+  const p=cur;setTimeout(()=>slides[p].classList.remove('exit'),500);
+  cur=n;slides[cur].classList.add('active');updateUI();
+}
+function go(d){goTo(Math.max(0,Math.min(total-1,cur+d)))}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1)});
+let tx=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX});
+document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)go(dx<0?1:-1)});
+updateUI();
+</script>
+</body>
+</html>
